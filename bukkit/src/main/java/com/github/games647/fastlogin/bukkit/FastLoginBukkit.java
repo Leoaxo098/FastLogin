@@ -31,6 +31,7 @@ import com.github.games647.fastlogin.bukkit.command.PremiumCommand;
 import com.github.games647.fastlogin.bukkit.command.DeleteCommand;
 import com.github.games647.fastlogin.bukkit.listener.ConnectionListener;
 import com.github.games647.fastlogin.bukkit.listener.PaperCacheListener;
+import com.github.games647.fastlogin.bukkit.listener.PaperPreJoinBypassListener;
 import com.github.games647.fastlogin.bukkit.listener.protocollib.ProtocolLibListener;
 import com.github.games647.fastlogin.bukkit.listener.protocollib.SkinApplyListener;
 import com.github.games647.fastlogin.bukkit.listener.protocolsupport.ProtocolSupportListener;
@@ -142,6 +143,14 @@ public class FastLoginBukkit extends JavaPlugin implements PlatformPlugin<Comman
         //if server is using paper - we need to add one more listener to correct the user cache usage
         if (isPaper()) {
             pluginManager.registerEvents(new PaperCacheListener(this), this);
+
+            // On Paper 1.21.5+, AuthMe's pre-join dialog blocks premium players from reaching
+            // PlayerJoinEvent. Register a bypass listener that completes the blocking future
+            // for FastLogin-verified premium players.
+            if (pluginManager.isPluginEnabled("AuthMeReloaded")) {
+                PaperPreJoinBypassListener bypassListener = new PaperPreJoinBypassListener(this);
+                PaperPreJoinBypassListener.register(this, bypassListener);
+            }
         }
 
         registerCommands();
